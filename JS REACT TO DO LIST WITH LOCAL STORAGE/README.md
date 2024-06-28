@@ -1,70 +1,216 @@
-# Getting Started with Create React App
+# React Todo List App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a simple React Todo List application that allows you to add, mark as complete, and clear todos. The application also attempts to store the todos in the browser's local storage.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- Add new todos
+- Mark todos as complete
+- Clear all todos
+- Persistent storage using local storage
 
-### `npm start`
+## Installation
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+To run this project locally, follow these steps:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. **Clone the repository:**
+2. **cd..  into the directory of the file **
+3. **npm start **
 
-### `npm test`
+Usage
+Add a Todo:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Type a todo item into the input field and click "Add Todo".
+Mark as Complete:
 
-### `npm run build`
+Click the checkbox next to a todo item to mark it as complete.
+Clear Todos:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Click the "Clear Todos" button to remove all todos from the list.
+Known Issues
+Local Storage
+Currently, there is an issue with the local storage functionality. The todos are not being saved or retrieved correctly. If you know how to fix this issue, please consider contributing to this project.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Contributing
+Contributions are welcome! If you have any suggestions or improvements, please submit a pull request or open an issue.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Complete Code: `App.js`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```javascript
+import React, { useState, useRef, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
+import "./App.css";
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+const LOCAL_STORAGE_KEY = "todoApp.todos";
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+function App() {
+  const [todos, setTodos] = useState([]);
+  const todoNameRef = useRef();
 
-## Learn More
+  // Load todos from localStorage on component mount
+  useEffect(() => {
+    const storedTodos = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+    if (storedTodos) setTodos(storedTodos);
+  }, []);
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+  // Save todos to localStorage whenever the todos state changes
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos));
+  }, [todos]);
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+  // Add a new todo
+  function handleAddTodo() {
+    const name = todoNameRef.current.value;
+    if (name === "") return;
+    setTodos((prevTodos) => {
+      return [...prevTodos, { id: uuidv4(), name: name, complete: false }];
+    });
+    todoNameRef.current.value = null;
+  }
 
-### Code Splitting
+  // Clear all todos
+  function handleClearTodos() {
+    setTodos([]);
+  }
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+  // Toggle todo completion
+  function toggleTodo(id) {
+    const newTodos = [...todos];
+    const todo = newTodos.find((todo) => todo.id === id);
+    todo.complete = !todo.complete;
+    setTodos(newTodos);
+  }
 
-### Analyzing the Bundle Size
+  return (
+    <div className="app-container">
+      <h1>Todo List</h1>
+      <TodoList todos={todos} toggleTodo={toggleTodo} />
+      <input ref={todoNameRef} type="text" placeholder="Enter todo" />
+      <div>
+        <button onClick={handleAddTodo}>Add Todo</button>
+        <button onClick={handleClearTodos}>Clear Todos</button>
+      </div>
+      <footer>
+        <div>{todos.filter((todo) => !todo.complete).length} left to do</div>
+      </footer>
+    </div>
+  );
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+function TodoList({ todos, toggleTodo }) {
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id} className={todo.complete ? "complete" : ""}>
+          <label>
+            <input
+              type="checkbox"
+              checked={todo.complete}
+              onChange={() => toggleTodo(todo.id)}
+            />
+            {todo.name}
+          </label>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
-### Making a Progressive Web App
+export default App;
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```
 
-### Advanced Configuration
+### Complete Code: `App.css`
+```
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+.app-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  max-width: 90%;
+}
 
-### Deployment
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+input[type="text"] {
+  width: calc(100% - 22px);
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
 
-### `npm run build` fails to minify
+button {
+  width: calc(50% - 12px);
+  padding: 10px;
+  margin: 5px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+button:disabled {
+  background-color: #ccc;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+li:last-child {
+  border-bottom: none;
+}
+
+input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.complete {
+  text-decoration: line-through;
+  color: #aaa;
+}
+
+footer {
+  margin-top: 10px;
+  text-align: center;
+}
+```
+How to Use
+Save the README.md content to a file named README.md.
+Save the App.js content to a file named src/App.js in your React project.
+Save the App.css content to a file named src/App.css in your React project.
+
+
